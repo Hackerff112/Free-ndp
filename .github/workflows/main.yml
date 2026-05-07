@@ -1,17 +1,26 @@
-name: GitHub_VPS
-on: workflow_dispatch # لتشغيله يدوياً
+name: GitHub_VPS_Ngrok
+on: workflow_dispatch
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup SSH & Cloudflare
+      - name: Setup SSH & Ngrok
         run: |
+          # 1. تثبيت SSH وتغيير الباسورد
           sudo apt update && sudo apt install openssh-server -y
           sudo echo 'root:1234' | sudo chpasswd
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo service ssh start
-          wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-          sudo dpkg -i cloudflared-linux-amd64.deb
-          cloudflared tunnel --url ssh://localhost:22
-          
+
+          # 2. تحميل وتثبيت Ngrok
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install ngrok -y
+
+          # 3. إعداد الـ Authtoken (استبدل 'YOUR_TOKEN' بالتوكن الخاص بك)
+          ngrok config add-authtoken 2Km7kgNws0g9aXtH4ZzdxzK6R9Z_2qGLQM9mJNeP5XLBfbTbf
+
+          # 4. تشغيل النفق وتوضيح بيانات الاتصال
+          echo "🚀 السيرفر يشتغل الآن..."
+          ngrok tcp 22 --log=stdout
