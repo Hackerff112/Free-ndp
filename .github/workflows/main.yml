@@ -1,0 +1,17 @@
+name: GitHub_VPS
+on: workflow_dispatch # لتشغيله يدوياً
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH & Cloudflare
+        run: |
+          sudo apt update && sudo apt install openssh-server -y
+          sudo echo 'root:1234' | sudo chpasswd
+          sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo service ssh start
+          wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb
+          cloudflared tunnel --url ssh://localhost:22
+          
